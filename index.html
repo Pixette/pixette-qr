@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!--
+    This policy is enforced by your browser, not by us. It forbids the page from
+    sending anything anywhere: no fetch/XHR/WebSocket (connect-src 'none'), no form
+    posts (form-action 'none'), no images or fonts from other servers, and only the
+    two script files in this repository may run (script-src 'self').
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Pixette QR Code Generator</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Pixette QR Code Generator</h1>
+
+    <p class="notice">
+      <strong>Your password never leaves this page.</strong>
+      Don't take our word for it: switch off your Wi-Fi now, the generator keeps working.
+      <a href="#trust">Why you can trust this page</a>
+    </p>
+
+    <form id="form" autocomplete="off">
+      <div class="field">
+        <label for="protocol">Server type</label>
+        <select id="protocol">
+          <option value="webdav">WebDAV</option>
+          <option value="smb">SMB (Windows share)</option>
+          <option value="synology_photos">Synology Photos</option>
+          <option value="immich">Immich</option>
+          <option value="jellyfin">Jellyfin</option>
+        </select>
+      </div>
+
+      <div class="field" data-for="webdav synology_photos immich jellyfin">
+        <label for="url">Server URL</label>
+        <input type="url" id="url" spellcheck="false" placeholder="https://192.168.1.100:5006">
+        <p class="hint" id="url-hint"></p>
+      </div>
+
+      <div data-for="smb">
+        <div class="row">
+          <div class="field grow">
+            <label for="host">Host</label>
+            <input type="text" id="host" spellcheck="false" placeholder="192.168.1.100 or nas.local">
+          </div>
+          <div class="field port">
+            <label for="port">Port</label>
+            <input type="number" id="port" min="1" max="65535" value="445">
+          </div>
+        </div>
+        <div class="field">
+          <label for="share">Share name</label>
+          <input type="text" id="share" spellcheck="false" placeholder="Photos">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="user" id="user-label">Username</label>
+        <input type="text" id="user" spellcheck="false" autocapitalize="off" placeholder="john">
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="text" id="password" spellcheck="false" autocapitalize="off" placeholder="Leave empty if the account has none">
+      </div>
+    </form>
+
+    <div id="qrcode" aria-label="QR code"></div>
+    <p class="hint center" id="qr-status">Fill in the server, then scan this code in Pixette (Add a source, then the QR code button).</p>
+
+    <div class="url-row">
+      <code id="url-preview">pixette://connect</code>
+      <button type="button" id="copy">Copy</button>
+    </div>
+
+    <section id="trust" class="trust">
+      <h2>Why you can trust this page</h2>
+      <p>A QR code with your password is only safe if the page that makes it keeps the
+        password to itself. You can check that yourself, no technical knowledge needed.</p>
+      <ol>
+        <li>
+          <strong>It works offline.</strong>
+          Once the page is open, switch off Wi-Fi or turn on airplane mode, then fill in the
+          form. The QR code still appears. A page with no connection can't send anything.
+        </li>
+        <li>
+          <strong>Your browser forbids it to send data.</strong>
+          The page carries a security rule (a Content-Security-Policy) that your browser
+          enforces, not us: it blocks every connection, form submission and outside image.
+          Even if someone changed the code to send your password, the browser would refuse.
+        </li>
+        <li>
+          <strong>Nothing is saved.</strong>
+          No account, no cookies, no analytics, no storage. Reload the page and the form is
+          empty again.
+        </li>
+        <li>
+          <strong>All the code is public.</strong>
+          The page is three short files on
+          <a href="https://github.com/Pixette/pixette-qr" target="_blank" rel="noopener noreferrer">GitHub</a>,
+          served exactly as they are there. Anyone can read them, and every change is
+          visible in the history.
+        </li>
+        <li>
+          <strong>Or leave the password out.</strong>
+          Leave the password field empty. The code then sets up the server and the user name,
+          and you type the password on each device in Pixette.
+        </li>
+      </ol>
+      <p class="hint">For developers: open the developer tools, Network tab, and type in the
+        form. No request appears. The policy is the first tag in the page source.</p>
+    </section>
+
+    <details>
+      <summary>Make the code with another QR generator</summary>
+      <p>Any QR generator works. Use this text, with every value URL-encoded
+        (for example <code>@</code> becomes <code>%40</code>):</p>
+      <pre>pixette://connect?protocol=&lt;type&gt;&amp;url=&lt;server URL&gt;&amp;user=&lt;user&gt;&amp;password=&lt;password&gt;</pre>
+      <table>
+        <thead><tr><th>Parameter</th><th>Used by</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td><code>protocol</code></td><td>all</td><td><code>webdav</code> (default), <code>smb</code>, <code>synology_photos</code>, <code>immich</code> or <code>jellyfin</code></td></tr>
+          <tr><td><code>url</code></td><td>all but SMB</td><td>Full server URL with <code>http://</code> or <code>https://</code></td></tr>
+          <tr><td><code>host</code></td><td>SMB</td><td>Host name or IP address</td></tr>
+          <tr><td><code>port</code></td><td>SMB</td><td>Optional, default 445</td></tr>
+          <tr><td><code>share</code></td><td>SMB</td><td>Share name</td></tr>
+          <tr><td><code>user</code></td><td>all</td><td>User name (Immich: your email)</td></tr>
+          <tr><td><code>password</code></td><td>all</td><td>Always include it, even empty: <code>password=</code></td></tr>
+        </tbody>
+      </table>
+      <p>Examples:</p>
+      <pre>pixette://connect?url=https%3A%2F%2Fnas.local%3A5006%2Fphotos&amp;user=john&amp;password=secret
+pixette://connect?protocol=smb&amp;host=192.168.1.100&amp;share=Photos&amp;user=john&amp;password=secret
+pixette://connect?protocol=jellyfin&amp;url=http%3A%2F%2F192.168.1.100%3A8096&amp;user=john&amp;password=</pre>
+      <p>Plex and OneDrive can't be set up with a QR code: Pixette signs in to them on the device itself.</p>
+    </details>
+  </main>
+
+  <script src="qrcode.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
